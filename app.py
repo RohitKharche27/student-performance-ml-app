@@ -22,11 +22,11 @@ def build_css(theme_name: str, size_name: str) -> str:
         input_height = "40px"
         input_font = "14px"
         header_size = "18px"
-        card_padding = "12px"
+        card_padding = "10px"
     elif size_name == "Large":
         base_font = "18px"
         label_size = "20px"
-        input_height = "60px"
+        input_height = "64px"
         input_font = "20px"
         header_size = "28px"
         card_padding = "22px"
@@ -36,7 +36,7 @@ def build_css(theme_name: str, size_name: str) -> str:
         input_height = "52px"
         input_font = "16px"
         header_size = "22px"
-        card_padding = "18px"
+        card_padding = "16px"
 
     # theme-specific colors (kept professional)
     if theme_name == "Light Corporate":
@@ -113,8 +113,8 @@ def build_css(theme_name: str, size_name: str) -> str:
     .input-row {{
         display:flex;
         flex-direction:column;
-        gap:6px;
-        margin-bottom:8px;
+        gap:4px;
+        margin-bottom:6px;
     }}
     .label-wrap {{
         display:flex; align-items:center; gap:8px;
@@ -127,17 +127,17 @@ def build_css(theme_name: str, size_name: str) -> str:
     }}
     .label-text {{ font-weight:700; font-size:{label_size}; margin:0; color: var(--text-color); }}
 
-    /* input control styling (compact, taller controls) */
+    /* input control styling (compact, tighter spacing) */
     .stNumberInput>div>div>input,
     .stTextInput>div>div>input {{
         height: {input_height} !important;
-        padding: 8px 14px !important;
+        padding: 6px 12px !important;
         font-size: {input_font} !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important;
         border: 2px solid {input_border} !important;
         background: {input_bg} !important;
         color: {text_color} !important;
-        transition: box-shadow .18s ease, border-color .18s ease;
+        transition: box-shadow .12s ease, border-color .12s ease;
     }}
     .stNumberInput>div>div>input:focus,
     .stTextInput>div>div>input:focus {{
@@ -146,10 +146,16 @@ def build_css(theme_name: str, size_name: str) -> str:
         border-color: rgba(79,172,254,0.9) !important;
     }}
 
+    /* reduce extra vertical gaps Streamlit adds around controls */
+    .stNumberInput, .stTextInput {{
+        margin-bottom: 2px !important;
+        padding-bottom: 0 !important;
+    }}
+
     /* predict button */
     .stButton>button {{
         width:100%;
-        padding:12px 14px;
+        padding:10px 12px;
         border-radius:12px;
         background: linear-gradient(90deg,var(--accent-start),var(--accent-end));
         color:white;
@@ -160,7 +166,7 @@ def build_css(theme_name: str, size_name: str) -> str:
     /* result dark box compact */
     .result-dark {{
         background: rgba(0,0,0,0.55);
-        padding: 12px;
+        padding: 10px;
         border-radius: 12px;
         font-size: 16px;
         color: {result_text};
@@ -266,11 +272,11 @@ if st.session_state.page == "Home":
 
     for i, feat in enumerate(feature_cols, start=1):
         icon = icons[(i - 1) % len(icons)]
-        # compact label + icon bubble
+        # very tight label + input block
         st.markdown(
             f"""
             <div class="input-row">
-              <div class="label-wrap" style="margin-bottom:4px">
+              <div class="label-wrap" style="margin-bottom:2px">
                 <div class="label-icon" style="background:linear-gradient(135deg,var(--accent-start),var(--accent-end))">{icon}</div>
                 <div class="label-text">{i}. {feat.replace('_', ' ')}</div>
               </div>
@@ -284,6 +290,7 @@ if st.session_state.page == "Home":
 
         if pd.api.types.is_numeric_dtype(col_series):
             default = float(round(col_series.mean(), 2))
+            # use empty label because we show label via HTML; keep Streamlit spacing minimal
             user_inputs[feat] = st.number_input("", value=default, step=1.0, format="%.2f", key=key_name)
         else:
             default = str(col_series.mode().iloc[0]) if not col_series.mode().empty else ""
@@ -387,6 +394,9 @@ else:  # Contact
           </ul>
           <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:8px 0" />
           <h4 style="margin:6px 0 6px 0">Send a message</h4>
+          <form>
+            <!-- placeholder form (Streamlit forms need server-side handling) -->
+          </form>
         </div>
         """,
         unsafe_allow_html=True,
