@@ -38,10 +38,9 @@ def build_css(theme_name: str, size_name: str) -> str:
         accent_start = "#0b63a6"
         accent_end = "#0f9cf0"
         text_color = "#0b2440"
-        glass_bg = "rgba(255,255,255,0.9)"
+        glass_bg = "rgba(255,255,255,0.95)"
         input_bg = "rgba(255,255,255,1)"
         input_border = "rgba(10,50,80,0.08)"
-        result_bg = "linear-gradient(90deg,#e6f1ff,#dbeeff)"
         result_text = "#05204a"
     elif theme_name == "Dark Pro":
         bg = "linear-gradient(180deg,#070816 0%, #0b2b3a 100%)"
@@ -51,7 +50,6 @@ def build_css(theme_name: str, size_name: str) -> str:
         glass_bg = "rgba(255,255,255,0.03)"
         input_bg = "rgba(255,255,255,0.02)"
         input_border = "rgba(255,255,255,0.06)"
-        result_bg = "linear-gradient(90deg,#0b2638,#071827)"
         result_text = "#e6f0fb"
     else:  # Business Gradient (default)
         bg = "linear-gradient(180deg, #0f172a 0%, #0b4f6c 45%, #0b63a6 100%)"
@@ -61,7 +59,6 @@ def build_css(theme_name: str, size_name: str) -> str:
         glass_bg = "rgba(255,255,255,0.04)"
         input_bg = "rgba(255,255,255,0.10)"
         input_border = "rgba(255,255,255,0.18)"
-        result_bg = "linear-gradient(90deg,#0ea5a0,#06b6d4)"
         result_text = "#ffffff"
 
     css = f"""
@@ -73,28 +70,10 @@ def build_css(theme_name: str, size_name: str) -> str:
         padding: 14px;
         font-size: {base_font};
     }}
-    /* Top navbar simulated */
-    .nav {{
-        display:flex;
-        gap:8px;
-        justify-content:center;
-        margin-bottom:12px;
-    }}
-    .nav button {{
-        background: transparent;
-        color: {text_color};
-        border: 1px solid rgba(255,255,255,0.06);
-        padding:8px 14px;
-        border-radius: 10px;
-        font-weight:700;
-        cursor:pointer;
-    }}
-    .nav button.active {{
-        background: linear-gradient(90deg,{accent_start},{accent_end});
-        color: white;
-        box-shadow: 0 8px 24px rgba(11,99,166,0.18);
-    }}
+    /* Sidebar styling adjustments */
+    .css-1d391kg {{ padding-top:0.5rem; }} /* small tweak for Streamlit versions (may be ignored) */
 
+    /* Header */
     .header {{
         background: {glass_bg};
         padding: 16px;
@@ -106,6 +85,7 @@ def build_css(theme_name: str, size_name: str) -> str:
     .header h1 {{ margin: 0; font-size: {header_size}; font-weight:800; }}
     .header p {{ margin: 6px 0 0; opacity:0.95; }}
 
+    /* Input card */
     .input-card {{
         background: {glass_bg};
         padding: 14px;
@@ -162,89 +142,72 @@ def build_css(theme_name: str, size_name: str) -> str:
     """
     return css
 
-# ---------------- Top controls: theme & size ----------------
-# Put theme & size selectors in a compact horizontal layout
-cols = st.columns([1, 2, 2, 1])
-with cols[0]:
-    st.write("")  # spacer
-with cols[1]:
-    theme_sel = st.selectbox("Theme", ["Business Gradient", "Light Corporate", "Dark Pro"], index=["Business Gradient","Light Corporate","Dark Pro"].index(st.session_state.theme))
-with cols[2]:
-    size_sel = st.selectbox("Size", ["Compact", "Normal", "Large"], index=["Compact","Normal","Large"].index(st.session_state.size))
-with cols[3]:
-    # simple nav sim: show current page
-    st.write(f" ")  # placeholder
+# ---------------- Sidebar: navigation + theme + size ----------------
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ("Home", "About", "Contact"), index=("Home","About","Contact").index(st.session_state.page))
+st.session_state.page = page
 
-# Apply selection to session state and CSS
-if theme_sel != st.session_state.theme:
-    st.session_state.theme = theme_sel
-if size_sel != st.session_state.size:
-    st.session_state.size = size_sel
+st.sidebar.markdown("---")
+st.sidebar.title("Appearance")
+theme = st.sidebar.selectbox("Theme", ["Business Gradient", "Light Corporate", "Dark Pro"], index=["Business Gradient","Light Corporate","Dark Pro"].index(st.session_state.theme))
+size = st.sidebar.selectbox("Size", ["Compact", "Normal", "Large"], index=["Compact","Normal","Large"].index(st.session_state.size))
 
+# update session state if changed
+if theme != st.session_state.theme:
+    st.session_state.theme = theme
+if size != st.session_state.size:
+    st.session_state.size = size
+
+# apply CSS based on selections
 st.markdown(build_css(st.session_state.theme, st.session_state.size), unsafe_allow_html=True)
 
-# ---------------- Navbar (Home / About / Contact) ----------------
-def set_page(p):
-    st.session_state.page = p
-
-nav_cols = st.columns([1,1,1])
-pages = ["Home", "About", "Contact"]
-for i, p in enumerate(pages):
-    if nav_cols[i].button(p, key=f"nav_{p}"):
-        set_page(p)
-
-st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
-
-# ---------------- Content: Home / About / Contact ----------------
-if st.session_state.page == "Home":
-    # Header
-    st.markdown('<div class="header">', unsafe_allow_html=True)
-    st.markdown("<h1>📊 Smart Student Analyzer</h1>", unsafe_allow_html=True)
-    st.markdown("<p>Professional clean mobile interface — enter values and tap Predict</p>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-    # Load CSV & Model (same checks as before)
+# ---------------- Content pages ----------------
+def load_model_and_df():
     CSV_PATH = "student_scores (1).csv"
     MODEL_PATH = "student_score.pkl"
-
     if not os.path.exists(CSV_PATH):
-        st.error("Dataset CSV not found. Upload `student_scores (1).csv` to the app folder.")
-        st.stop()
+        st.error("Dataset CSV not found. Upload `student_scores (1).csv`.")
+        return None, None
     if not os.path.exists(MODEL_PATH):
-        st.error("Model file `student_score.pkl` not found in app folder.")
-        st.stop()
-
-    # read CSV
+        st.error("Model `student_score.pkl` not found.")
+        return None, None
     try:
         df = pd.read_csv(CSV_PATH)
     except Exception as e:
         st.error(f"Could not read CSV: {e}")
-        st.stop()
-
-    cols_lower = [c.lower() for c in df.columns]
-    target_col = df.columns[cols_lower.index("score")] if "score" in cols_lower else None
-    feature_cols = [c for c in df.columns if c != target_col]
-
-    if len(feature_cols) == 0:
-        st.error("No input features detected in CSV. Ensure CSV has input columns.")
-        st.stop()
-
-    # load model
+        return None, None
     try:
         with open(MODEL_PATH, "rb") as f:
             model = pickle.load(f)
     except Exception as e:
         st.error(f"Failed to load model: {e}")
+        return None, None
+    return df, model
+
+if st.session_state.page == "Home":
+    st.markdown('<div class="header">', unsafe_allow_html=True)
+    st.markdown("<h1>📊 Smart Student Analyzer</h1>", unsafe_allow_html=True)
+    st.markdown("<p>Professional clean mobile interface — enter values and tap Predict</p>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    df, model = load_model_and_df()
+    if df is None or model is None:
+        st.stop()
+
+    cols_lower = [c.lower() for c in df.columns]
+    target_col = df.columns[cols_lower.index("score")] if "score" in cols_lower else None
+    feature_cols = [c for c in df.columns if c != target_col]
+    if len(feature_cols) == 0:
+        st.error("No input features detected in CSV. Ensure CSV has input columns.")
         st.stop()
 
     expected_features = getattr(model, "n_features_in_", None)
 
-    # Input card
     st.markdown('<div class="input-card">', unsafe_allow_html=True)
     st.subheader("Enter input values")
     user_inputs = {}
     for i, feat in enumerate(feature_cols, start=1):
-        label = f"{i}. {feat.replace('_',' ')}"  # show real names
+        label = f"{i}. {feat.replace('_',' ')}"
         col_series = df[feat].dropna()
         if pd.api.types.is_numeric_dtype(col_series):
             default = float(round(col_series.mean(), 2))
@@ -254,7 +217,6 @@ if st.session_state.page == "Home":
             user_inputs[feat] = st.text_input(label, value=default, key=f"inp_{i}")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Predict button
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     predict_clicked = st.button("Predict Score")
 
@@ -281,7 +243,6 @@ if st.session_state.page == "Home":
                 prog.empty()
                 pred = model.predict([X])[0]
                 st.markdown(f"<div class='result-dark'>🏆 Predicted Score: {pred}</div>", unsafe_allow_html=True)
-                # Feedback
                 try:
                     sc = float(pred)
                     if sc >= 85:
@@ -307,17 +268,7 @@ elif st.session_state.page == "About":
         **Smart Student Analyzer** — professional prediction UI built with Streamlit.
         - Mobile-first, professional gradient themes.
         - Auto-detects features from your CSV and uses your pickled model.
-        - Theme & size controls for different devices and tastes.
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown("---")
-    st.markdown("**How it works**")
-    st.markdown(
-        """
-        1. Place `student_scores (1).csv` and `student_score.pkl` in the same folder as this app.  
-        2. Enter the feature values (labels are read from CSV).  
-        3. Tap **Predict Score** — the app sends the values to your loaded scikit-learn model and displays result.
+        - Theme & size controls in sidebar for different devices and tastes.
         """,
         unsafe_allow_html=True,
     )
@@ -333,7 +284,6 @@ else:  # Contact
         Need help integrating or customizing this app?  
         - **Email:** your-email@example.com  
         - **GitHub:** github.com/your-repo  
-        - **Phone:** +1-234-567-890
         """,
         unsafe_allow_html=True,
     )
@@ -343,7 +293,6 @@ else:  # Contact
     email = st.text_input("Email")
     message = st.text_area("Message")
     if st.button("Send Message"):
-        # For demo only — no real sending. Replace with actual sending code if needed.
         st.success("Thanks — your message has been recorded (demo).")
         st.write("We would contact you at:", email)
 
