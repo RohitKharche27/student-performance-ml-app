@@ -13,29 +13,32 @@ if "theme" not in st.session_state:
 if "size" not in st.session_state:
     st.session_state.size = "Normal"
 
-# ---------------- Helper: CSS builder (themes + sizes) ----------------
+# ---------------- Helper: CSS builder (compact, unique UI) ----------------
 def build_css(theme_name: str, size_name: str) -> str:
-    # size settings
+    # compact size settings
     if size_name == "Compact":
         base_font = "14px"
-        label_size = "14px"
-        input_height = "44px"
-        input_font = "15px"
+        label_size = "13px"
+        input_height = "40px"
+        input_font = "14px"
         header_size = "18px"
+        card_padding = "12px"
     elif size_name == "Large":
         base_font = "18px"
         label_size = "20px"
-        input_height = "64px"
+        input_height = "60px"
         input_font = "20px"
         header_size = "28px"
+        card_padding = "22px"
     else:  # Normal
         base_font = "16px"
-        label_size = "17px"
-        input_height = "58px"
-        input_font = "18px"
+        label_size = "16px"
+        input_height = "52px"
+        input_font = "16px"
         header_size = "22px"
+        card_padding = "18px"
 
-    # theme-specific colors
+    # theme-specific colors (kept professional)
     if theme_name == "Light Corporate":
         bg = "linear-gradient(180deg,#f6fbff 0%, #ffffff 100%)"
         accent_start = "#0b63a6"
@@ -46,131 +49,145 @@ def build_css(theme_name: str, size_name: str) -> str:
         input_border = "rgba(10,50,80,0.08)"
         result_text = "#05204a"
     elif theme_name == "Dark Pro":
-        bg = "linear-gradient(180deg,#070816 0%, #0b2b3a 100%)"
+        bg = "linear-gradient(180deg,#05060a 0%, #071625 100%)"
         accent_start = "#00b4d8"
         accent_end = "#0077b6"
         text_color = "#e6f0fb"
-        glass_bg = "rgba(255,255,255,0.03)"
+        glass_bg = "rgba(255,255,255,0.02)"
         input_bg = "rgba(255,255,255,0.02)"
         input_border = "rgba(255,255,255,0.06)"
         result_text = "#e6f0fb"
     else:  # Business Gradient (default)
-        bg = "linear-gradient(180deg, #0f172a 0%, #0b4f6c 45%, #0b63a6 100%)"
+        bg = "linear-gradient(180deg, #071028 0%, #0b3b57 45%, #0b63a6 100%)"
         accent_start = "#0b63a6"
         accent_end = "#0f9cf0"
         text_color = "#e6f0fb"
-        glass_bg = "rgba(255,255,255,0.04)"
-        input_bg = "rgba(255,255,255,0.10)"
-        input_border = "rgba(255,255,255,0.18)"
+        glass_bg = "rgba(255,255,255,0.03)"
+        input_bg = "rgba(255,255,255,0.06)"
+        input_border = "rgba(255,255,255,0.12)"
         result_text = "#ffffff"
 
     css = f"""
     <style>
+    :root{{ --accent-start:{accent_start}; --accent-end:{accent_end}; --text-color:{text_color}; }}
+
     .stApp {{
         background: {bg};
         color: {text_color} !important;
-        font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        padding: 14px;
+        font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        padding: 10px 12px;
         font-size: {base_font};
     }}
 
-    /* Top area */
-    .header {{
-        background: {glass_bg};
-        padding: 16px;
-        border-radius: 12px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255,255,255,0.04);
-        text-align:center;
-        box-shadow: 0 6px 20px rgba(2,6,23,0.5);
+    /* --- Top compact header (single line title) --- */
+    .top-header {{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        padding:6px 8px;
+        border-radius:10px;
+        margin-bottom:8px;
+        background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+        border:1px solid rgba(255,255,255,0.03);
     }}
-    .header h1 {{ margin: 0; font-size: {header_size}; font-weight:800; }}
-    .header p {{ margin: 6px 0 0; opacity:0.95; }}
+    .app-icon {{
+        width:44px; height:44px; border-radius:10px;
+        background:linear-gradient(135deg,var(--accent-start),var(--accent-end));
+        display:flex; align-items:center; justify-content:center;
+        font-size:20px; color:white; box-shadow:0 6px 18px rgba(11,99,166,0.18);
+    }}
+    .app-title {{ font-weight:800; font-size:{header_size}; margin:0; padding:0; }}
+    .app-sub {{ font-size:12px; opacity:0.9; margin:0; color: rgba(255,255,255,0.85); }}
 
-    /* Input card (upgraded attractive) */
+    /* --- Main card (unique UI, compact) --- */
     .input-card {{
-        background: rgba(255,255,255,0.06);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
-        padding: 20px;
-        border: 1px solid rgba(255,255,255,0.12);
-        margin-bottom: 16px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+        background: rgba(255,255,255,0.035);
+        border-radius: 14px;
+        padding: {card_padding};
+        border: 1px solid rgba(255,255,255,0.04);
+        box-shadow: 0 8px 30px rgba(2,6,23,0.45);
+        margin-bottom: 10px;
     }}
 
-    .input-label {{
-        font-size: {label_size} !important;
-        font-weight: 800 !important;
-        color: {text_color} !important;
-        margin-bottom: 8px !important;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+    /* label with small icon bubble */
+    .input-row {{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+        margin-bottom:12px;
     }}
+    .label-wrap {{
+        display:flex; align-items:center; gap:8px;
+    }}
+    .label-icon {{
+        width:28px; height:28px; border-radius:8px;
+        background: linear-gradient(135deg,var(--accent-start),var(--accent-end));
+        display:inline-flex; align-items:center; justify-content:center; color:white; font-size:14px;
+        box-shadow: 0 6px 14px rgba(11,99,166,0.14);
+    }}
+    .label-text {{ font-weight:700; font-size:{label_size}; margin:0; color: var(--text-color); }}
 
+    /* input control styling (compact, taller controls) */
     .stNumberInput>div>div>input,
     .stTextInput>div>div>input {{
         height: {input_height} !important;
-        padding: 12px 16px !important;
+        padding: 10px 14px !important;
         font-size: {input_font} !important;
-        border-radius: 14px !important;
+        border-radius: 12px !important;
         border: 2px solid {input_border} !important;
         background: {input_bg} !important;
         color: {text_color} !important;
-        transition: 0.25s ease !important;
+        transition: box-shadow .18s ease, border-color .18s ease;
     }}
-
-    .stNumberInput>div>div>input:hover,
-    .stTextInput>div>div>input:hover {{
-        border-color: rgba(64,201,255,0.9) !important;
-        box-shadow: 0 0 12px rgba(64,201,255,0.18) !important;
-    }}
-
     .stNumberInput>div>div>input:focus,
     .stTextInput>div>div>input:focus {{
-        border-color: rgba(79,172,254,0.95) !important;
-        box-shadow: 0 0 20px rgba(79,172,254,0.28) !important;
-        outline: none !important;
+        outline:none !important;
+        box-shadow: 0 8px 22px rgba(11,99,166,0.18) !important;
+        border-color: rgba(79,172,254,0.9) !important;
     }}
 
+    /* predict button */
     .stButton>button {{
-        width: 100%;
-        background: linear-gradient(90deg,{accent_start},{accent_end});
-        color: white;
+        width:100%;
+        padding:12px 14px;
+        border-radius:12px;
+        background: linear-gradient(90deg,var(--accent-start),var(--accent-end));
+        color:white;
         font-weight:800;
-        padding: 14px 16px;
-        border-radius: 12px;
-        border: none;
-        font-size: {input_font};
-        box-shadow:0 10px 30px rgba(11,99,166,0.18);
+        box-shadow: 0 12px 30px rgba(11,99,166,0.18);
     }}
 
+    /* result dark box compact */
     .result-dark {{
         background: rgba(0,0,0,0.55);
-        backdrop-filter: blur(6px);
-        padding: 14px;
+        padding: 12px;
         border-radius: 12px;
-        font-size: 18px;
+        font-size: 16px;
         color: {result_text};
-        font-weight: 900;
-        text-align: center;
+        font-weight:900;
+        text-align:center;
+        margin-top:10px;
         border: 1px solid rgba(255,255,255,0.06);
-        margin-top: 10px;
     }}
 
-    /* Sidebar tweaks */
-    .css-1d391kg {{ padding-top:0.4rem; }} /* may vary by Streamlit version */
+    /* small muted */
+    .small-muted {{ font-size:12px; color: rgba(255,255,255,0.85); text-align:center; margin-top:8px; }}
 
-    .footer {{ text-align:center; margin-top:12px; color: rgba(255,255,255,0.85); font-size:13px; }}
-    .small-muted {{ font-size:12px; opacity:0.9; text-align:center; margin-top:8px; }}
+    /* remove extra paddings Streamlit sometimes adds (attempts) */
+    .css-1v3fvcr, .css-1d391kg {{ padding-top:0 !important; padding-bottom:0 !important; }}
 
+    /* responsive tweaks */
+    @media(max-width:600px) {{
+        .app-title {{ font-size:18px; }}
+        .app-icon {{ width:40px; height:40px; font-size:18px; }}
+    }}
     </style>
     """
     return css
 
-# ---------------- Sidebar: navigation + theme + size ----------------
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ("Home", "About", "Contact"), index=("Home","About","Contact").index(st.session_state.page))
+# ---------------- Sidebar: navigation + theme + size (kept but compact) ----------------
+st.sidebar.title("Menu")
+page = st.sidebar.radio("", ("Home", "About", "Contact"), index=("Home","About","Contact").index(st.session_state.page))
 st.session_state.page = page
 
 st.sidebar.markdown("---")
@@ -178,77 +195,95 @@ st.sidebar.title("Appearance")
 theme = st.sidebar.selectbox("Theme", ["Business Gradient", "Light Corporate", "Dark Pro"], index=["Business Gradient","Light Corporate","Dark Pro"].index(st.session_state.theme))
 size = st.sidebar.selectbox("Size", ["Compact", "Normal", "Large"], index=["Compact","Normal","Large"].index(st.session_state.size))
 
-# update session state if changed
+# update session state
 if theme != st.session_state.theme:
     st.session_state.theme = theme
 if size != st.session_state.size:
     st.session_state.size = size
 
-# apply CSS based on selections
+# apply CSS
 st.markdown(build_css(st.session_state.theme, st.session_state.size), unsafe_allow_html=True)
 
-# ---------------- Utility: load model & df ----------------
+# ---------------- Utility loader ----------------
 def load_model_and_df():
     CSV_PATH = "student_scores (1).csv"
     MODEL_PATH = "student_score.pkl"
-    if not os.path.exists(CSV_PATH):
-        st.error("Dataset CSV not found. Upload `student_scores (1).csv` in the app folder.")
-        return None, None
-    if not os.path.exists(MODEL_PATH):
-        st.error("Model `student_score.pkl` not found in the app folder.")
-        return None, None
+    if not os.path.exists(CSV_PATH) or not os.path.exists(MODEL_PATH):
+        return None, None, "missing"
     try:
         df = pd.read_csv(CSV_PATH)
     except Exception as e:
-        st.error(f"Could not read CSV: {e}")
-        return None, None
+        return None, None, f"csv_err:{e}"
     try:
         with open(MODEL_PATH, "rb") as f:
             model = pickle.load(f)
     except Exception as e:
-        st.error(f"Failed to load model: {e}")
-        return None, None
-    return df, model
+        return None, None, f"model_err:{e}"
+    return df, model, None
 
-# ---------------- Page: Home ----------------
+# ---------------- Page content (compact, unique UI) ----------------
 if st.session_state.page == "Home":
-    st.markdown('<div class="header">', unsafe_allow_html=True)
-    st.markdown("<h1>📊 Smart Student Analyzer</h1>", unsafe_allow_html=True)
-    st.markdown("<p>Professional input UI — enter values and tap Predict</p>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    # compact header (single line, no sub-header)
+    st.markdown(
+        """
+        <div class="top-header">
+          <div class="app-icon">📊</div>
+          <div style="display:flex;flex-direction:column;">
+            <div class="app-title">Smart Student Analyzer</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-    df, model = load_model_and_df()
-    if df is None or model is None:
+    df, model, err = load_model_and_df()
+    if err == "missing":
+        st.error("Place `student_scores (1).csv` and `student_score.pkl` in the app folder.")
+        st.stop()
+    if err and err.startswith("csv_err"):
+        st.error("Could not read CSV.")
+        st.stop()
+    if err and err.startswith("model_err"):
+        st.error("Could not load model.")
         st.stop()
 
     cols_lower = [c.lower() for c in df.columns]
     target_col = df.columns[cols_lower.index("score")] if "score" in cols_lower else None
     feature_cols = [c for c in df.columns if c != target_col]
     if len(feature_cols) == 0:
-        st.error("No input features detected in CSV. Ensure CSV has input columns.")
+        st.error("No input features detected in the CSV.")
         st.stop()
 
     expected_features = getattr(model, "n_features_in_", None)
 
-    # Attractive input card with icons & larger fields
+    # unique compact input card
     st.markdown('<div class="input-card">', unsafe_allow_html=True)
-    st.subheader("Enter input values")
+    # small subtitle line (compact)
+    st.markdown("<div style='margin-bottom:6px; font-weight:600; color:rgba(255,255,255,0.95)'>Enter values</div>", unsafe_allow_html=True)
 
     user_inputs = {}
     icons = ["📘", "🎯", "📈", "⏳", "📝", "⭐", "🧠", "📊"]
 
     for i, feat in enumerate(feature_cols, start=1):
         icon = icons[(i - 1) % len(icons)]
-        # label with icon (HTML)
-        label_html = f"<div class='input-label'>{icon} {i}. {feat.replace('_', ' ')}</div>"
-        st.markdown(label_html, unsafe_allow_html=True)
+        # compact label + icon bubble
+        st.markdown(
+            f"""
+            <div class="input-row">
+              <div class="label-wrap">
+                <div class="label-icon" style="background:linear-gradient(135deg,var(--accent-start),var(--accent-end))">{icon}</div>
+                <div class="label-text">{i}. {feat.replace('_', ' ')}</div>
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         col_series = df[feat].dropna()
         key_name = f"inp_{i}_{feat}"
 
         if pd.api.types.is_numeric_dtype(col_series):
             default = float(round(col_series.mean(), 2))
-            # use empty label in Streamlit control since we render label above via HTML
             user_inputs[feat] = st.number_input("", value=default, step=1.0, format="%.2f", key=key_name)
         else:
             default = str(col_series.mode().iloc[0]) if not col_series.mode().empty else ""
@@ -256,8 +291,8 @@ if st.session_state.page == "Home":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Predict button
-    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+    # compact predict button
+    st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
     predict_clicked = st.button("Predict Score")
 
     if predict_clicked:
@@ -283,7 +318,7 @@ if st.session_state.page == "Home":
                 prog = st.progress(0)
                 for pct in range(0, 101, 20):
                     prog.progress(pct)
-                    time.sleep(0.04)
+                    time.sleep(0.03)
                 prog.empty()
                 try:
                     pred = model.predict([X])[0]
@@ -304,47 +339,32 @@ if st.session_state.page == "Home":
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")
 
-    st.markdown("<div class='small-muted'>Smart Student Analyzer</div>", unsafe_allow_html=True)
+    # compact helper text, no footer bar
+    st.markdown('<div class="small-muted"></div>', unsafe_allow_html=True)
 
-# ---------------- Page: About ----------------
 elif st.session_state.page == "About":
-    st.markdown('<div class="header">', unsafe_allow_html=True)
-    st.markdown("<h1>About</h1>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown(
         """
-        **Smart Student Analyzer** — professional prediction UI built with Streamlit.
-
-        - Mobile-first, professional gradient themes.
-        - Attractive input boxes with icons and adjustable size.
-        - Auto-detects features from your CSV and uses your pickled model.
-        - Theme & size controls in the sidebar.
+        <div style="padding:8px 6px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.02)">
+          <h3 style="margin:0 0 6px 0">About</h3>
+          <div style="font-size:14px;line-height:1.5;color:rgba(255,255,255,0.9)">
+            Smart Student Analyzer — compact, professional UI for quick predictions.
+            The app auto-detects feature columns from your CSV and uses your pickled model for inference.
+          </div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
-    st.markdown("---")
-    st.markdown("<div class='small-muted'>Made for smooth, professional demos and quick deployments.</div>", unsafe_allow_html=True)
 
-# ---------------- Page: Contact ----------------
-else:
-    st.markdown('<div class="header">', unsafe_allow_html=True)
-    st.markdown("<h1>Contact</h1>", unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+else:  # Contact
     st.markdown(
         """
-        Need help customizing this app?
-        - Email: your-email@example.com
-        - GitHub: github.com/your-repo
+        <div style="padding:8px 6px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.02)">
+          <h3 style="margin:0 0 6px 0">Contact</h3>
+          <div style="font-size:14px;line-height:1.5;color:rgba(255,255,255,0.9)">
+            Need customization? Email: your-email@example.com
+          </div>
+        </div>
         """,
         unsafe_allow_html=True,
     )
-    st.markdown("---")
-    st.markdown("Or drop a message below:")
-    name = st.text_input("Your name")
-    email = st.text_input("Email")
-    message = st.text_area("Message")
-    if st.button("Send Message"):
-        st.success("Thanks — your message has been recorded (demo). We will contact you at: " + (email or "n/a"))
-
-# ---------------- Footer ----------------
-st.markdown("<div class='footer'>Smart Student Analyzer</div>", unsafe_allow_html=True)
