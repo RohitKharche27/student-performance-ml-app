@@ -12,53 +12,61 @@ st.set_page_config(
     layout="wide",
 )
 
-# ---------------- Custom CSS ----------------
+# ---------------- Custom CSS (No white boxes + vertical layout) ----------------
 st.markdown(
     """
     <style>
     .stApp {
-        background: linear-gradient(180deg, #f0f7ff 0%, #ffffff 100%);
+        background: linear-gradient(180deg, #dff4ff 0%, #ffffff 100%);
         font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     .header-card {
-        background: linear-gradient(90deg,#0ea5e9 0%,#7dd3fc 100%);
+        background: linear-gradient(90deg,#06b6d4 0%,#3b82f6 100%);
         color: white;
-        padding: 22px;
+        padding: 20px;
         border-radius: 14px;
-        box-shadow: 0 8px 30px rgba(13, 71, 161, 0.12);
-        margin-bottom: 20px;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.18);
+        margin-bottom: 15px;
     }
     .header-title {
-        font-size: 28px;
-        font-weight: 700;
+        font-size: 30px;
+        font-weight: 800;
     }
 
+    /* Remove white background from cards */
     .card {
-        background: white;
-        border-radius: 14px;
-        padding: 20px;
-        box-shadow: 0 6px 18px rgba(20,20,40,0.06);
-        margin-bottom: 20px;
+        background: transparent !important;
+        padding: 15px;
+        margin-bottom: 10px;
     }
 
+    /* Input box label styling */
+    .stNumberInput>div>label {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    /* Big Predict button */
     .stButton>button {
         background: linear-gradient(90deg,#06b6d4,#7c3aed);
         color: white;
-        font-weight: 700;
-        padding: 12px 20px;
+        font-weight: 800;
+        padding: 12px 26px;
         border-radius: 12px;
         border: none;
-        box-shadow: 0 8px 20px rgba(124,58,237,0.18);
+        font-size: 17px;
+        box-shadow: 0 8px 20px rgba(124,58,237,0.22);
     }
 
+    /* Result Badge */
     .result-badge {
         background: linear-gradient(90deg,#10b981,#34d399);
         color: white;
-        padding: 10px 14px;
+        padding: 8px 14px;
         border-radius: 999px;
-        font-weight: 800;
-        font-size: 18px;
+        font-weight: 900;
+        font-size: 20px;
         display: inline-block;
     }
     </style>
@@ -70,77 +78,70 @@ st.markdown(
 st.markdown(
     """
     <div class="header-card">
-      <div style="display:flex; align-items:center; gap:16px;">
-        <div style="font-size:40px;">🎓</div>
-        <div>
-          <div class="header-title">Student Performance Predictor</div>
-          <div>Beautiful UI • Smooth Animation • Accurate Model Prediction</div>
+        <div style="display:flex; align-items:center; gap:16px;">
+            <div style="font-size:40px;">🎓</div>
+            <div>
+                <div class="header-title">Student Performance Predictor</div>
+                <div>Simple • Clean • Vertical Inputs • No White Boxes</div>
+            </div>
         </div>
-      </div>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# ---------------- Load dataset (hidden from UI) ----------------
+# ---------------- Load dataset (hidden) ----------------
 csv_path = "student_scores (1).csv"
 if not os.path.exists(csv_path):
-    st.error("CSV file missing! Please upload it.")
+    st.error("CSV file missing!")
     st.stop()
 
 df = pd.read_csv(csv_path)
 
-# detect target column
+# target detection
 cols_lower = [c.lower() for c in df.columns]
 target_col = df.columns[cols_lower.index("score")] if "score" in cols_lower else None
 feature_cols = [c for c in df.columns if c != target_col]
 
-# ---------------- Load Model ----------------
+# ---------------- Load model ----------------
 model_path = "student_score.pkl"
 if not os.path.exists(model_path):
-    st.error("Model file missing! Upload student_score.pkl.")
+    st.error("Model file missing!")
     st.stop()
 
-try:
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)
-except Exception as e:
-    st.error(f"Model load error: {e}")
-    st.stop()
+with open(model_path, "rb") as f:
+    model = pickle.load(f)
 
 expected_features = getattr(model, "n_features_in_", None)
 
-# ---------------- Input Section ----------------
+# ---------------- Inputs (vertical layout) ----------------
 st.markdown('<div class="card">', unsafe_allow_html=True)
-st.subheader("✨ Enter Student Details")
+st.subheader("📋 Enter Student Details")
 
-cols = st.columns(2)
 user_inputs = {}
+defaults = {}
 
 # smart defaults
-defaults = {}
 for c in feature_cols:
     coldata = df[c].dropna()
     defaults[c] = float(round(coldata.mean(), 2)) if pd.api.types.is_numeric_dtype(coldata) else ""
 
-# input fields (but names hidden to user, shown as Input 1, Input 2)
+# one-by-one input boxes (vertical)
 for i, feat in enumerate(feature_cols):
-    col = cols[i % 2]
-    with col:
-        label = f"Input {i+1} 🔹"  # <-- names removed
-        if pd.api.types.is_numeric_dtype(df[feat]):
-            val = st.number_input(label, value=defaults[feat], step=1.0)
-        else:
-            val = st.text_input(label, value=str(defaults[feat]))
-        user_inputs[feat] = val
+    label = f"Input {i+1} 🔹"  # names hidden
+    if pd.api.types.is_numeric_dtype(df[feat]):
+        user_inputs[feat] = st.number_input(label, value=defaults[feat], step=1.0)
+    else:
+        user_inputs[feat] = st.text_input(label, value=str(defaults[feat]))
 
 st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------------- Predict ----------------
-center = st.columns([1, 2, 1])[1]
-with center:
-    predict = st.button("🚀 Predict Score")
+# ---------------- Predict Button ----------------
+btn_center = st.columns([1, 2, 1])[1]
+with btn_center:
+    predict = st.button("🚀 Predict")
 
+# ---------------- Prediction Logic ----------------
 if predict:
     X = []
     for c in feature_cols:
@@ -149,40 +150,36 @@ if predict:
         except:
             X.append(user_inputs[c])
 
-    # Feature mismatch check
-    if expected_features is not None and expected_features != len(X):
+    # feature mismatch
+    if expected_features and expected_features != len(X):
         st.error(
             f"Model expects {expected_features} inputs but received {len(X)}."
         )
     else:
-        # loading animation
-        bar = st.progress(0)
-        for i in range(0, 101, 10):
-            bar.progress(i)
+        # animated progress
+        prog = st.progress(0)
+        for p in range(0, 101, 10):
+            prog.progress(p)
             time.sleep(0.03)
 
+        pred = model.predict([X])[0]
+
+        # result badge
+        st.markdown(
+            f"""
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div class="result-badge">🏆 {pred}</div>
+                <div style="font-size:20px; font-weight:700;">Predicted Score</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        # balloons for high score
         try:
-            pred = model.predict([X])[0]
-
-            st.markdown(
-                f"""
-                <div style="display:flex; align-items:center; gap:16px;">
-                    <div class="result-badge">🏆 {pred}</div>
-                    <div style="font-size:18px; font-weight:600;">Predicted Score</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            # animations
-            try:
-                if float(pred) >= 85:
-                    st.balloons()
-            except:
-                pass
-
-        except Exception as e:
-            st.error(f"Prediction failed: {e}")
+            if float(pred) >= 85:
+                st.balloons()
+        except:
+            pass
 
 st.markdown("---")
-st.caption("Made with ❤️ for a better student performance experience.")
