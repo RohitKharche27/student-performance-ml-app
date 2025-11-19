@@ -13,23 +13,26 @@ if "theme" not in st.session_state:
 if "size" not in st.session_state:
     st.session_state.size = "Normal"
 
-# ---------------- Helper: CSS builder ----------------
+# ---------------- Helper: CSS builder (themes + sizes) ----------------
 def build_css(theme_name: str, size_name: str) -> str:
     # size settings
     if size_name == "Compact":
         base_font = "14px"
-        label_size = "13px"
-        input_height = "38px"
+        label_size = "14px"
+        input_height = "44px"
+        input_font = "15px"
         header_size = "18px"
     elif size_name == "Large":
         base_font = "18px"
-        label_size = "18px"
-        input_height = "54px"
-        header_size = "26px"
+        label_size = "20px"
+        input_height = "64px"
+        input_font = "20px"
+        header_size = "28px"
     else:  # Normal
         base_font = "16px"
-        label_size = "15px"
-        input_height = "46px"
+        label_size = "17px"
+        input_height = "58px"
+        input_font = "18px"
         header_size = "22px"
 
     # theme-specific colors
@@ -70,10 +73,8 @@ def build_css(theme_name: str, size_name: str) -> str:
         padding: 14px;
         font-size: {base_font};
     }}
-    /* Sidebar styling adjustments */
-    .css-1d391kg {{ padding-top:0.5rem; }} /* small tweak for Streamlit versions (may be ignored) */
 
-    /* Header */
+    /* Top area */
     .header {{
         background: {glass_bg};
         padding: 16px;
@@ -81,34 +82,55 @@ def build_css(theme_name: str, size_name: str) -> str:
         margin-bottom: 12px;
         border: 1px solid rgba(255,255,255,0.04);
         text-align:center;
+        box-shadow: 0 6px 20px rgba(2,6,23,0.5);
     }}
     .header h1 {{ margin: 0; font-size: {header_size}; font-weight:800; }}
     .header p {{ margin: 6px 0 0; opacity:0.95; }}
 
-    /* Input card */
+    /* Input card (upgraded attractive) */
     .input-card {{
-        background: {glass_bg};
-        padding: 14px;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.04);
-        margin-bottom: 12px;
+        background: rgba(255,255,255,0.06);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(255,255,255,0.12);
+        margin-bottom: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.35);
     }}
-    label {{ font-weight:700 !important; font-size:{label_size} !important; color:inherit !important; display:block; margin-bottom:6px; }}
+
+    .input-label {{
+        font-size: {label_size} !important;
+        font-weight: 800 !important;
+        color: {text_color} !important;
+        margin-bottom: 8px !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }}
 
     .stNumberInput>div>div>input,
     .stTextInput>div>div>input {{
-        height:{input_height};
-        padding: 10px 12px;
-        font-size: {base_font};
-        border-radius: 8px;
-        border: 1px solid {input_border};
-        background: {input_bg};
-        color: inherit !important;
+        height: {input_height} !important;
+        padding: 12px 16px !important;
+        font-size: {input_font} !important;
+        border-radius: 14px !important;
+        border: 2px solid {input_border} !important;
+        background: {input_bg} !important;
+        color: {text_color} !important;
+        transition: 0.25s ease !important;
     }}
+
+    .stNumberInput>div>div>input:hover,
+    .stTextInput>div>div>input:hover {{
+        border-color: rgba(64,201,255,0.9) !important;
+        box-shadow: 0 0 12px rgba(64,201,255,0.18) !important;
+    }}
+
     .stNumberInput>div>div>input:focus,
     .stTextInput>div>div>input:focus {{
-        outline: none;
-        box-shadow: 0 6px 18px rgba(11,99,166,0.12);
+        border-color: rgba(79,172,254,0.95) !important;
+        box-shadow: 0 0 20px rgba(79,172,254,0.28) !important;
+        outline: none !important;
     }}
 
     .stButton>button {{
@@ -116,11 +138,11 @@ def build_css(theme_name: str, size_name: str) -> str:
         background: linear-gradient(90deg,{accent_start},{accent_end});
         color: white;
         font-weight:800;
-        padding: 12px 16px;
-        border-radius: 10px;
+        padding: 14px 16px;
+        border-radius: 12px;
         border: none;
-        font-size: {base_font};
-        box-shadow:0 8px 24px rgba(11,99,166,0.18);
+        font-size: {input_font};
+        box-shadow:0 10px 30px rgba(11,99,166,0.18);
     }}
 
     .result-dark {{
@@ -136,8 +158,12 @@ def build_css(theme_name: str, size_name: str) -> str:
         margin-top: 10px;
     }}
 
+    /* Sidebar tweaks */
+    .css-1d391kg {{ padding-top:0.4rem; }} /* may vary by Streamlit version */
+
     .footer {{ text-align:center; margin-top:12px; color: rgba(255,255,255,0.85); font-size:13px; }}
     .small-muted {{ font-size:12px; opacity:0.9; text-align:center; margin-top:8px; }}
+
     </style>
     """
     return css
@@ -161,15 +187,15 @@ if size != st.session_state.size:
 # apply CSS based on selections
 st.markdown(build_css(st.session_state.theme, st.session_state.size), unsafe_allow_html=True)
 
-# ---------------- Content pages ----------------
+# ---------------- Utility: load model & df ----------------
 def load_model_and_df():
     CSV_PATH = "student_scores (1).csv"
     MODEL_PATH = "student_score.pkl"
     if not os.path.exists(CSV_PATH):
-        st.error("Dataset CSV not found. Upload `student_scores (1).csv`.")
+        st.error("Dataset CSV not found. Upload `student_scores (1).csv` in the app folder.")
         return None, None
     if not os.path.exists(MODEL_PATH):
-        st.error("Model `student_score.pkl` not found.")
+        st.error("Model `student_score.pkl` not found in the app folder.")
         return None, None
     try:
         df = pd.read_csv(CSV_PATH)
@@ -184,10 +210,11 @@ def load_model_and_df():
         return None, None
     return df, model
 
+# ---------------- Page: Home ----------------
 if st.session_state.page == "Home":
     st.markdown('<div class="header">', unsafe_allow_html=True)
     st.markdown("<h1>📊 Smart Student Analyzer</h1>", unsafe_allow_html=True)
-    st.markdown("<p>Professional clean mobile interface — enter values and tap Predict</p>", unsafe_allow_html=True)
+    st.markdown("<p>Professional input UI — enter values and tap Predict</p>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
     df, model = load_model_and_df()
@@ -203,20 +230,33 @@ if st.session_state.page == "Home":
 
     expected_features = getattr(model, "n_features_in_", None)
 
+    # Attractive input card with icons & larger fields
     st.markdown('<div class="input-card">', unsafe_allow_html=True)
     st.subheader("Enter input values")
+
     user_inputs = {}
+    icons = ["📘", "🎯", "📈", "⏳", "📝", "⭐", "🧠", "📊"]
+
     for i, feat in enumerate(feature_cols, start=1):
-        label = f"{i}. {feat.replace('_',' ')}"
+        icon = icons[(i - 1) % len(icons)]
+        # label with icon (HTML)
+        label_html = f"<div class='input-label'>{icon} {i}. {feat.replace('_', ' ')}</div>"
+        st.markdown(label_html, unsafe_allow_html=True)
+
         col_series = df[feat].dropna()
+        key_name = f"inp_{i}_{feat}"
+
         if pd.api.types.is_numeric_dtype(col_series):
             default = float(round(col_series.mean(), 2))
-            user_inputs[feat] = st.number_input(label, value=default, step=1.0, format="%.2f", key=f"inp_{i}")
+            # use empty label in Streamlit control since we render label above via HTML
+            user_inputs[feat] = st.number_input("", value=default, step=1.0, format="%.2f", key=key_name)
         else:
             default = str(col_series.mode().iloc[0]) if not col_series.mode().empty else ""
-            user_inputs[feat] = st.text_input(label, value=default, key=f"inp_{i}")
+            user_inputs[feat] = st.text_input("", value=default, key=key_name)
+
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # Predict button
     st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
     predict_clicked = st.button("Predict Score")
 
@@ -225,11 +265,15 @@ if st.session_state.page == "Home":
         conversion_error = False
         for feat in feature_cols:
             val = user_inputs[feat]
-            try:
-                X.append(float(val))
-            except:
-                conversion_error = True
-                break
+            if pd.api.types.is_numeric_dtype(df[feat]):
+                try:
+                    X.append(float(val))
+                except:
+                    conversion_error = True
+                    break
+            else:
+                X.append(val)
+
         if conversion_error:
             st.error("Please enter valid numeric values.")
         else:
@@ -237,28 +281,32 @@ if st.session_state.page == "Home":
                 st.error(f"Model expects {expected_features} features but got {len(X)}.")
             else:
                 prog = st.progress(0)
-                for pct in range(0, 101, 25):
+                for pct in range(0, 101, 20):
                     prog.progress(pct)
                     time.sleep(0.04)
                 prog.empty()
-                pred = model.predict([X])[0]
-                st.markdown(f"<div class='result-dark'>🏆 Predicted Score: {pred}</div>", unsafe_allow_html=True)
                 try:
-                    sc = float(pred)
-                    if sc >= 85:
-                        st.success("Excellent result!")
-                        st.balloons()
-                    elif sc >= 70:
-                        st.success("Very good performance")
-                    elif sc >= 50:
-                        st.info("Fair — opportunity to improve.")
-                    else:
-                        st.warning("Needs improvement.")
-                except:
-                    pass
+                    pred = model.predict([X])[0]
+                    st.markdown(f"<div class='result-dark'>🏆 Predicted Score: {pred}</div>", unsafe_allow_html=True)
+                    try:
+                        sc = float(pred)
+                        if sc >= 85:
+                            st.success("Excellent result!")
+                            st.balloons()
+                        elif sc >= 70:
+                            st.success("Very good performance")
+                        elif sc >= 50:
+                            st.info("Fair — opportunity to improve.")
+                        else:
+                            st.warning("Needs improvement.")
+                    except:
+                        pass
+                except Exception as e:
+                    st.error(f"Prediction failed: {e}")
 
     st.markdown("<div class='small-muted'>Smart Student Analyzer</div>", unsafe_allow_html=True)
 
+# ---------------- Page: About ----------------
 elif st.session_state.page == "About":
     st.markdown('<div class="header">', unsafe_allow_html=True)
     st.markdown("<h1>About</h1>", unsafe_allow_html=True)
@@ -266,24 +314,27 @@ elif st.session_state.page == "About":
     st.markdown(
         """
         **Smart Student Analyzer** — professional prediction UI built with Streamlit.
+
         - Mobile-first, professional gradient themes.
+        - Attractive input boxes with icons and adjustable size.
         - Auto-detects features from your CSV and uses your pickled model.
-        - Theme & size controls in sidebar for different devices and tastes.
+        - Theme & size controls in the sidebar.
         """,
         unsafe_allow_html=True,
     )
     st.markdown("---")
     st.markdown("<div class='small-muted'>Made for smooth, professional demos and quick deployments.</div>", unsafe_allow_html=True)
 
-else:  # Contact
+# ---------------- Page: Contact ----------------
+else:
     st.markdown('<div class="header">', unsafe_allow_html=True)
     st.markdown("<h1>Contact</h1>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown(
         """
-        Need help integrating or customizing this app?  
-        - **Email:** your-email@example.com  
-        - **GitHub:** github.com/your-repo  
+        Need help customizing this app?
+        - Email: your-email@example.com
+        - GitHub: github.com/your-repo
         """,
         unsafe_allow_html=True,
     )
@@ -293,8 +344,7 @@ else:  # Contact
     email = st.text_input("Email")
     message = st.text_area("Message")
     if st.button("Send Message"):
-        st.success("Thanks — your message has been recorded (demo).")
-        st.write("We would contact you at:", email)
+        st.success("Thanks — your message has been recorded (demo). We will contact you at: " + (email or "n/a"))
 
 # ---------------- Footer ----------------
 st.markdown("<div class='footer'>Smart Student Analyzer</div>", unsafe_allow_html=True)
