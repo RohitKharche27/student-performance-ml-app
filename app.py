@@ -86,7 +86,7 @@ def build_css(theme_name: str, size_name: str) -> str:
         gap:10px;
         padding:6px 8px;
         border-radius:10px;
-        margin-bottom:8px;
+        margin-bottom:6px;
         background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
         border:1px solid rgba(255,255,255,0.03);
     }}
@@ -106,7 +106,7 @@ def build_css(theme_name: str, size_name: str) -> str:
         padding: {card_padding};
         border: 1px solid rgba(255,255,255,0.04);
         box-shadow: 0 8px 30px rgba(2,6,23,0.45);
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }}
 
     /* label with small icon bubble */
@@ -114,7 +114,7 @@ def build_css(theme_name: str, size_name: str) -> str:
         display:flex;
         flex-direction:column;
         gap:6px;
-        margin-bottom:12px;
+        margin-bottom:8px;
     }}
     .label-wrap {{
         display:flex; align-items:center; gap:8px;
@@ -131,7 +131,7 @@ def build_css(theme_name: str, size_name: str) -> str:
     .stNumberInput>div>div>input,
     .stTextInput>div>div>input {{
         height: {input_height} !important;
-        padding: 10px 14px !important;
+        padding: 8px 14px !important;
         font-size: {input_font} !important;
         border-radius: 12px !important;
         border: 2px solid {input_border} !important;
@@ -166,12 +166,12 @@ def build_css(theme_name: str, size_name: str) -> str:
         color: {result_text};
         font-weight:900;
         text-align:center;
-        margin-top:10px;
+        margin-top:8px;
         border: 1px solid rgba(255,255,255,0.06);
     }}
 
     /* small muted */
-    .small-muted {{ font-size:12px; color: rgba(255,255,255,0.85); text-align:center; margin-top:8px; }}
+    .small-muted {{ font-size:12px; color: rgba(255,255,255,0.85); text-align:center; margin-top:6px; }}
 
     /* remove extra paddings Streamlit sometimes adds (attempts) */
     .css-1v3fvcr, .css-1d391kg {{ padding-top:0 !important; padding-bottom:0 !important; }}
@@ -270,7 +270,7 @@ if st.session_state.page == "Home":
         st.markdown(
             f"""
             <div class="input-row">
-              <div class="label-wrap">
+              <div class="label-wrap" style="margin-bottom:4px">
                 <div class="label-icon" style="background:linear-gradient(135deg,var(--accent-start),var(--accent-end))">{icon}</div>
                 <div class="label-text">{i}. {feat.replace('_', ' ')}</div>
               </div>
@@ -343,14 +343,30 @@ if st.session_state.page == "Home":
     st.markdown('<div class="small-muted"></div>', unsafe_allow_html=True)
 
 elif st.session_state.page == "About":
+    # About Us: add theory + short description
     st.markdown(
         """
-        <div style="padding:8px 6px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.02)">
-          <h3 style="margin:0 0 6px 0">About</h3>
-          <div style="font-size:14px;line-height:1.5;color:rgba(255,255,255,0.9)">
-            Smart Student Analyzer — compact, professional UI for quick predictions.
-            The app auto-detects feature columns from your CSV and uses your pickled model for inference.
-          </div>
+        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)">
+          <h3 style="margin:0 0 8px 0">About Us</h3>
+          <p style="margin:0 0 8px 0; color:rgba(255,255,255,0.9)">
+            <strong>Smart Student Analyzer</strong> helps educators and students quickly estimate performance
+            using simple, explainable inputs such as study hours, attendance and assignments submitted.
+          </p>
+
+          <h4 style="margin:8px 0 6px 0">Learning Theory (brief)</h4>
+          <p style="margin:0 0 8px 0; color:rgba(235,245,255,0.9); line-height:1.5">
+            Educational research shows that student outcomes are influenced by consistent study time,
+            active participation, and timely submission of assignments. This app models the relationship between
+            these measurable behaviors and likely performance to give teachers and students a fast, actionable signal.
+            It complements formative assessment and is not a substitute for full grading systems.
+          </p>
+
+          <h4 style="margin:8px 0 6px 0">How to use</h4>
+          <ol style="margin:0 0 8px 18px; color:rgba(235,245,255,0.9)">
+            <li>Provide realistic values for Hours Studied, Attendance (%) and Assignments Submitted.</li>
+            <li>Tap <em>Predict Score</em> to get an estimate and short feedback.</li>
+            <li>Use results as guidance — combine with teacher judgement and assessments.</li>
+          </ol>
         </div>
         """,
         unsafe_allow_html=True,
@@ -359,12 +375,21 @@ elif st.session_state.page == "About":
 else:  # Contact
     st.markdown(
         """
-        <div style="padding:8px 6px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.02)">
-          <h3 style="margin:0 0 6px 0">Contact</h3>
-          <div style="font-size:14px;line-height:1.5;color:rgba(255,255,255,0.9)">
-            Need customization? Email: your-email@example.com
-          </div>
+        <div style="padding:10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)">
+          <h3 style="margin:0 0 8px 0">Contact Us</h3>
+          <p style="margin:0 0 6px 0; color:rgba(255,255,255,0.9)">
+            For customization, integration or support please reach out:
+          </p>
+          <ul style="color:rgba(235,245,255,0.9)">
+            <li><strong>Email:</strong> support@smartstudent.ai</li>
+            <li><strong>Phone:</strong> +1 (555) 123-4567</li>
+            <li><strong>Address:</strong> 123 Education Lane, Knowledge City</li>
+          </ul>
+          <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:8px 0" />
+          <h4 style="margin:6px 0 6px 0">Send a message</h4>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
+# end of file
