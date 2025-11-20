@@ -344,8 +344,6 @@ if st.session_state.page == "Home":
                             # convert negative to positive decimal (absolute value) and round
                             sc = round(abs(sc), 2)
                             display_prediction = sc
-                            # show a short note to user (keeps UX clear)
-                            st.info("Negative model output converted to a positive estimate.")
                         else:
                             display_prediction = round(sc, 2)
                     except:
