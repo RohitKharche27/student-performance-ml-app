@@ -305,11 +305,15 @@ if st.session_state.page == "Home":
     if predict_clicked:
         X = []
         conversion_error = False
+        numeric_inputs_below_12 = False
         for feat in feature_cols:
             val = user_inputs[feat]
             if pd.api.types.is_numeric_dtype(df[feat]):
                 try:
-                    X.append(float(val))
+                    fv = float(val)
+                    X.append(fv)
+                    if fv < 12:
+                        numeric_inputs_below_12 = True
                 except:
                     conversion_error = True
                     break
@@ -329,20 +333,42 @@ if st.session_state.page == "Home":
                 prog.empty()
                 try:
                     pred = model.predict([X])[0]
-                    st.markdown(f"<div class='result-dark'>🏆 Predicted Score: {pred}</div>", unsafe_allow_html=True)
+
+                    # --- New handling to avoid showing negative results ---
+                    # If the model returns a numeric negative prediction, convert to a positive decimal.
+                    # Also round to 2 decimals for display.
+                    display_prediction = pred
                     try:
                         sc = float(pred)
-                        if sc >= 85:
+                        if sc < 0:
+                            # convert negative to positive decimal (absolute value) and round
+                            sc = round(abs(sc), 2)
+                            display_prediction = sc
+                            # show a short note to user (keeps UX clear)
+                            st.info("Negative model output converted to a positive estimate.")
+                        else:
+                            display_prediction = round(sc, 2)
+                    except:
+                        # non-numeric prediction (leave as-is)
+                        display_prediction = pred
+
+                    st.markdown(f"<div class='result-dark'>🏆 Predicted Score: {display_prediction}</div>", unsafe_allow_html=True)
+
+                    # use sc if numeric for feedback messages
+                    try:
+                        sc_val = float(display_prediction)
+                        if sc_val >= 85:
                             st.success("Excellent result!")
                             st.balloons()
-                        elif sc >= 70:
+                        elif sc_val >= 70:
                             st.success("Very good performance")
-                        elif sc >= 50:
+                        elif sc_val >= 50:
                             st.info("Fair — opportunity to improve.")
                         else:
                             st.warning("Needs improvement.")
                     except:
                         pass
+
                 except Exception as e:
                     st.error(f"Prediction failed: {e}")
 
